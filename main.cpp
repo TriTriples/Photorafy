@@ -109,6 +109,7 @@ int main() {
     }
 
     ImageEditor editor(fullPath);
+    editor.preview("generated/preview.bmp");
 
     int choice;
     bool done = false;
@@ -140,8 +141,8 @@ int main() {
             default: cout << "Invalid choice!\n"; break;
         }
         if (!done) {
-            editor.preview("generated/preview.png");
-            cout << "Preview updated: generated/preview.png\n";
+            editor.preview("generated/preview.bmp");
+            cout << "Preview updated: generated/preview.bmp\n";
         }
     }
 
