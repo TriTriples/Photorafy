@@ -67,6 +67,16 @@ public:
         }
     }
 
+    void invert() {
+        for (int i = 0; i < currentImage.height; i++) {
+            for (int j = 0; j < currentImage.width; j++) {
+                for (int c = 0; c < 3; c++) {
+                    currentImage(j, i, c) = 255 - currentImage(j, i, c);
+                }
+            }
+        }
+    }
+
     void undo() {
         if (!history.empty()) {
             currentImage = history.top();
@@ -119,8 +129,9 @@ int main() {
         cout << "2. Flip Horizontal\n";
         cout << "3. Black & White\n";
         cout << "4. Grayscale\n";
-        cout << "5. Undo\n";
-        cout << "6. Save & Exit\n";
+        cout << "5. Invert Colors\n";
+        cout << "6. Undo\n";
+        cout << "7. Save & Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -129,8 +140,9 @@ int main() {
             case 2: editor.flipHorizontal(); break;
             case 3: editor.blackAndWhite(); break;
             case 4: editor.grayscale(); break;
-            case 5: editor.undo(); break;
-            case 6: {
+            case 5: editor.invert(); break;
+            case 6: editor.undo(); break;
+            case 7: {
                 string saveName;
                 cout << "Enter name to save final image: ";
                 cin >> saveName;
