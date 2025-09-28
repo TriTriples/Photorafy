@@ -1,0 +1,64 @@
+#include <iostream>
+#include "libs/Image_Class.h"
+using namespace std;
+
+Image resizeImage(const Image& src, int newW, int newH) {
+    Image resized(newW, newH);
+
+    for (int y = 0; y < newH; y++) {
+        for (int x = 0; x < newW; x++) {
+            int srcX = x * src.width / newW;
+            if (srcX >= src.width) srcX = src.width - 1;
+
+            int srcY = y * src.height / newH;
+            if (srcY >= src.height) srcY = src.height - 1;
+
+            for (int c = 0; c < src.channels; c++) {
+                resized(x, y, c) = src(srcX, srcY, c);
+            }
+        }
+    }
+    return resized;
+}
+
+Image mergeImages(const Image& img1, const Image& img2) {
+    int newW = max(img1.width, img2.width);
+    int newH = max(img1.height, img2.height);
+
+    Image resized1 = resizeImage(img1, newW, newH);
+    Image resized2 = resizeImage(img2, newW, newH);
+
+    Image result(newW, newH);
+
+    for (int y = 0; y < newH; y++) {
+        for (int x = 0; x < newW; x++) {
+            unsigned char r = (resized1(x, y, 0) + resized2(x, y, 0)) / 2;
+            unsigned char g = (resized1(x, y, 1) + resized2(x, y, 1)) / 2;
+            unsigned char b = (resized1(x, y, 2) + resized2(x, y, 2)) / 2; 
+
+            result(x, y, 0) = r;
+            result(x, y, 1) = g;
+            result(x, y, 2) = b;
+        }
+    }
+    return result;
+}
+
+int main() {
+    string imge1, imge2, mergedimg;
+    cout << "Please enter the first image:" << endl;
+    cin >> imge1;
+    cout << "Please enter the second image:" << endl;
+    cin >> imge2;
+    cout << "Please enter the output image name:" << endl;
+    cin >> mergedimg;
+
+    Image image1(imge1);
+    Image image2(imge2);
+
+    Image merged = mergeImages(image1, image2);
+
+    merged.saveImage(mergedimg);
+
+    return 0;
+}
