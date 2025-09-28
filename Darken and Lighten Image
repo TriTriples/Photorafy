@@ -1,0 +1,41 @@
+#include <iostream>
+#include <algorithm>
+#include "libs/Image_Class.h"
+using namespace std;
+
+void changeBrightness(Image& image, double factor) {
+    for (int y = 0; y < image.height; y++) {
+        for (int x = 0; x < image.width; x++) {
+
+            unsigned char r = image(x, y, 0);
+            unsigned char g = image(x, y, 1);
+            unsigned char b = image(x, y, 2);
+
+            int newR = min(255, max(0, static_cast<int>(r * factor)));
+            int newG = min(255, max(0, static_cast<int>(g * factor)));
+            int newB = min(255, max(0,   static_cast<int>(b * factor)));
+
+            image(x, y, 0) = newR;
+            image(x, y, 1) = newG;
+            image(x, y, 2) = newB;
+        }
+    }
+}
+
+int main() {
+    string filename, outputName;
+    double factor;
+
+    cout << "Enter image name : ";
+    cin >> filename;
+    cout << "Enter brightness factor : ";
+    cin >> factor;
+    cout << "Enter new image name : ";
+    cin >> outputName;
+    Image image(filename);
+    changeBrightness(image, factor);
+    image.saveImage(outputName);
+    
+    return 0;
+}
+
