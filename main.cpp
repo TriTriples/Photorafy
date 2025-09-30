@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <filesystem>
 #include "lib/Image_Class.h" 
+#include <vector>
 using namespace std;
 
 class ImageEditor {
@@ -11,6 +12,8 @@ private:
     Image originalImage;
     Image currentImage;
     std::stack<Image> history;
+    vector<int> supportedAngles = {0, 90, -90, 180, 270, -270};
+
 
 public:
     ImageEditor(const std::string& path)
@@ -156,6 +159,51 @@ public:
         currentImage = result;
     }
 
+    void rotate(int angleDegrees) {
+        history.push(currentImage);
+
+        int w = currentImage.width;
+        int h = currentImage.height;
+        int c = currentImage.channels;
+
+        Image result(w, h);
+        int angle = ((angleDegrees % 360) + 360) % 360;
+        
+
+        if (angle == 0) {
+            result = currentImage;
+        }
+        else if (angle == 180) {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    for (int ch = 0; ch < c; ch++) {
+                        result(w - 1 - x, h - 1 - y, ch) = currentImage(x, y, ch);
+                    }
+                }
+            }
+        }
+        else if (angle == 90) {
+            result = Image(h, w); 
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    for (int ch = 0; ch < c; ch++) {
+                        result(h - 1 - y, x, ch) = currentImage(x, y, ch);
+                    }
+                }
+            }
+        }
+        else if (angle == 270) {
+            result = Image(h, w); 
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    for (int ch = 0; ch < c; ch++) {
+                        result(y, w - 1 - x, ch) = currentImage(x, y, ch);
+                    }
+                }
+            }
+        }
+        currentImage = result;
+    }
 
     void undo() {
         if (!history.empty()) {
@@ -173,6 +221,7 @@ public:
     }
 
     Image getCurrentImage() const { return currentImage; }
+    vector<int> getSupportedAngles() const { return supportedAngles; }
 
 };
 
@@ -212,11 +261,12 @@ int main() {
         cout << "3. Grayscale\n";
         cout << "4. Invert Colors\n";
         cout << "5. Brighten/Darken\n";
-        cout << "6. Merge with Image\n";
-        cout << "7. Resize Image\n";
-        cout << "8. Undo\n";
-        cout << "9. Exit\n";
-        cout << "10. Save & Exit\n";
+        cout << "6. Rotate Image\n";
+        cout << "7. Merge with Image\n";
+        cout << "8. Resize Image\n";
+        cout << "9. Undo\n";
+        cout << "10. Exit\n";
+        cout << "11. Save & Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -251,6 +301,27 @@ int main() {
                 break;
             }
             case 6: {
+                int rotateChoice;
+                cout << "Choose rotation:\n";
+                cout << "1. 90° Clockwise\n";
+                cout << "2. 90° Counter-clockwise\n";
+                cout << "3. 180°\n";
+                cout << "4. 270° Clockwise\n";
+                cout << "5. 270° Counter-clockwise\n";
+                cout << "Enter choice: ";
+                cin >> rotateChoice;
+
+                int angle = (rotateChoice >= 1 && rotateChoice <= 5) ? editor.getSupportedAngles()[rotateChoice] : 0;
+
+                if (rotateChoice) {
+                    editor.rotate(angle);
+                    cout << "Image rotated " << angle << "°!\n";
+                } else {
+                    cout << "Invalid choice! No rotation applied.\n";
+                }
+                break;
+            }
+            case 7: {
                 string mergeFilename;
                 cout << "Enter filename of image to merge with (from images folder): ";
                 cin >> mergeFilename;
@@ -264,7 +335,7 @@ int main() {
                 }
                 break;
             }
-            case 7: {
+            case 8: {
                 int newWidth, newHeight;
                 cout << "Enter new width: ";
                 cin >> newWidth;
@@ -279,8 +350,8 @@ int main() {
                 }
                 break;
             }
-            case 8: editor.undo(); break;
-            case 9: {
+            case 9: editor.undo(); break;
+            case 10: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -303,7 +374,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 10: {
+            case 11: {
                 string saveName;
                 cout << "Enter name to save final image (leave empty to use original): ";
                 cin.ignore();
