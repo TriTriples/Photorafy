@@ -207,34 +207,50 @@ int main() {
     bool done = false;
     while (!done) {
         cout << "\n--- Welcome to your Image Editor ---\n";
-        cout << "1. Flip Vertical\n";
-        cout << "2. Flip Horizontal\n";
-        cout << "3. Black & White\n";
-        cout << "4. Grayscale\n";
-        cout << "5. Invert Colors\n";
-        cout << "6. Brighten/Darken\n";
-        cout << "7. Merge with Image\n";
-        cout << "8. Resize Image\n";
-        cout << "9. Undo\n";
-        cout << "10. Exit\n";
-        cout << "11. Save & Exit\n";
+        cout << "1. Flip Image\n";
+        cout << "2. Black & White\n";
+        cout << "3. Grayscale\n";
+        cout << "4. Invert Colors\n";
+        cout << "5. Brighten/Darken\n";
+        cout << "6. Merge with Image\n";
+        cout << "7. Resize Image\n";
+        cout << "8. Undo\n";
+        cout << "9. Exit\n";
+        cout << "10. Save & Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
         switch (choice) {
-            case 1: editor.flipVertical(); break;
-            case 2: editor.flipHorizontal(); break;
-            case 3: editor.blackAndWhite(); break;
-            case 4: editor.grayscale(); break;
-            case 5: editor.invert(); break;
-            case 6: {
+            case 1: {
+                int flipChoice;
+                cout << "Select flip direction:\n";
+                cout << "1. Vertically\n";
+                cout << "2. Horizontally\n";
+                cout << "Enter choice: ";
+                cin >> flipChoice;
+                
+                if (flipChoice == 1) {
+                    editor.flipVertical();
+                    cout << "Image flipped vertically!\n";
+                } else if (flipChoice == 2) {
+                    editor.flipHorizontal();
+                    cout << "Image flipped horizontally!\n";
+                } else {
+                    cout << "Invalid choice! No flip applied.\n";
+                }
+                break;
+            }
+            case 2: editor.blackAndWhite(); break;
+            case 3: editor.grayscale(); break;
+            case 4: editor.invert(); break;
+            case 5: {
                 double factor;
                 cout << "Enter brightness factor (>1 to brighten, <1 to darken): ";
                 cin >> factor;
                 editor.changeBrightness(factor);
                 break;
             }
-            case 7: {
+            case 6: {
                 string mergeFilename;
                 cout << "Enter filename of image to merge with (from images folder): ";
                 cin >> mergeFilename;
@@ -248,7 +264,7 @@ int main() {
                 }
                 break;
             }
-            case 8: {
+            case 7: {
                 int newWidth, newHeight;
                 cout << "Enter new width: ";
                 cin >> newWidth;
@@ -263,8 +279,8 @@ int main() {
                 }
                 break;
             }
-            case 9: editor.undo(); break;
-            case 10: {
+            case 8: editor.undo(); break;
+            case 9: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -287,7 +303,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 11: {
+            case 10: {
                 string saveName;
                 cout << "Enter name to save final image (leave empty to use original): ";
                 cin.ignore();
