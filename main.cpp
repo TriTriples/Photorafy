@@ -118,6 +118,9 @@ public:
                 resized(x, y, 2) = b;
             }
         }
+        if(!forMerge) {
+            currentImage = resized;
+        }
         return resized;
     }
 
@@ -169,6 +172,8 @@ public:
         currentImage.saveImage(path);
     }
 
+    Image getCurrentImage() const { return currentImage; }
+
 };
 
 
@@ -209,8 +214,9 @@ int main() {
         cout << "5. Invert Colors\n";
         cout << "6. Brighten/Darken\n";
         cout << "7. Merge with Image\n";
-        cout << "8. Undo\n";
-        cout << "9. Save & Exit\n";
+        cout << "8. Resize Image\n";
+        cout << "9. Undo\n";
+        cout << "10. Save & Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -241,8 +247,23 @@ int main() {
                 }
                 break;
             }
-            case 8: editor.undo(); break;
-            case 9: {
+            case 8: {
+                int newWidth, newHeight;
+                cout << "Enter new width: ";
+                cin >> newWidth;
+                cout << "Enter new height: ";
+                cin >> newHeight;
+                if (newWidth > 0 && newHeight > 0) {
+                    cout << "Resizing image...\n";
+                    editor.resizeImage(editor.getCurrentImage(), newWidth, newHeight);
+                    cout << "Image resized to " << newWidth << "x" << newHeight << " pixels!\n";
+                } else {
+                    cout << "Invalid dimensions! Width and height must be positive.\n";
+                }
+                break;
+            }
+            case 9: editor.undo(); break;
+            case 10: {
                 string saveName;
                 cout << "Enter name to save final image: ";
                 cin >> saveName;
