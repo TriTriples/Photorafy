@@ -166,44 +166,30 @@ public:
         int h = currentImage.height;
         int c = currentImage.channels;
 
-        Image result(w, h);
-        int angle = ((angleDegrees % 360) + 360) % 360;
-        
+        int turns = ((angleDegrees % 360) + 360) % 360 / 90;
 
-        if (angle == 0) {
-            result = currentImage;
-        }
-        else if (angle == 180) {
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    for (int ch = 0; ch < c; ch++) {
-                        result(w - 1 - x, h - 1 - y, ch) = currentImage(x, y, ch);
+        Image result((turns % 2 == 0) ? w : h, (turns % 2 == 0) ? h : w);
+
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                for (int ch = 0; ch < c; ch++) {
+                    int nx, ny;
+
+                    switch (turns) {
+                        case 0: nx = x;         ny = y;         break; // 0°
+                        case 1: nx = h - 1 - y; ny = x;         break; // 90° CW
+                        case 2: nx = w - 1 - x; ny = h - 1 - y; break; // 180°
+                        case 3: nx = y;         ny = w - 1 - x; break; // 270° CW (-90°)
                     }
+
+                    result(nx, ny, ch) = currentImage(x, y, ch);
                 }
             }
         }
-        else if (angle == 90) {
-            result = Image(h, w); 
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    for (int ch = 0; ch < c; ch++) {
-                        result(h - 1 - y, x, ch) = currentImage(x, y, ch);
-                    }
-                }
-            }
-        }
-        else if (angle == 270) {
-            result = Image(h, w); 
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    for (int ch = 0; ch < c; ch++) {
-                        result(y, w - 1 - x, ch) = currentImage(x, y, ch);
-                    }
-                }
-            }
-        }
+
         currentImage = result;
     }
+
 
     void undo() {
         if (!history.empty()) {
