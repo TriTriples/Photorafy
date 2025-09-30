@@ -216,7 +216,8 @@ int main() {
         cout << "7. Merge with Image\n";
         cout << "8. Resize Image\n";
         cout << "9. Undo\n";
-        cout << "10. Save & Exit\n";
+        cout << "10. Exit\n";
+        cout << "11. Save & Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -264,6 +265,29 @@ int main() {
             }
             case 9: editor.undo(); break;
             case 10: {
+                char saveChoice;
+                cout << "Do you want to save your changes before exiting? (y/n): ";
+                cin >> saveChoice;
+                
+                if (saveChoice == 'y' || saveChoice == 'Y') {
+                    string saveName;
+                    cout << "Enter name to save final image (leave empty to use original): ";
+                    cin.ignore();
+                    getline(cin, saveName);
+
+                    if (saveName.empty()) {
+                        saveName = filename.substr(filename.find_last_of("/\\") + 1);
+                    }
+                    
+                    editor.save("generated/" + saveName);
+                    cout << "Image saved as: generated/" << saveName << endl;
+                }
+                
+                cout << "Exiting without saving changes.\n";
+                done = true;
+                break;
+            }
+            case 11: {
                 string saveName;
                 cout << "Enter name to save final image (leave empty to use original): ";
                 cin.ignore();
