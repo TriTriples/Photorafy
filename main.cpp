@@ -265,9 +265,16 @@ int main() {
             case 9: editor.undo(); break;
             case 10: {
                 string saveName;
-                cout << "Enter name to save final image: ";
-                cin >> saveName;
+                cout << "Enter name to save final image (leave empty to use original): ";
+                cin.ignore();
+                getline(cin, saveName);
+
+                if (saveName.empty()) {
+                    saveName = filename.substr(filename.find_last_of("/\\") + 1);
+                }
+                
                 editor.save("generated/" + saveName);
+                cout << "Image saved as: generated/" << saveName << endl;
                 done = true;
                 break;
             }
