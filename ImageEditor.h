@@ -18,6 +18,10 @@ public:
     void flipHorizontal();
     void blackAndWhite();
     void grayscale();
+    void invert();
+    void changeBrightness(double factor);
+    void resizeImage(const Image& src, int newW, int newH);
+    void mergeWithImage(const std::string& imagePath);
 
     void undo();
     void save(const std::string& path);
