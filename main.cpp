@@ -43,8 +43,8 @@ using namespace std;
 
 // ===== CONFIGURABLE PATHS =====
 // The following can be modified these paths according to your testing environment
-const string IMAGES_FOLDER = "/images";        // input images (leave empty for root, or '/images' for example if you have an images folder)
-const string GENERATED_FOLDER = "/generated";  // output/saved images (leave empty for root, or '/generated')
+const string IMAGES_FOLDER = "/images";        // input images (leave empty for current dir, or '/images' for example if you have an images folder)
+const string GENERATED_FOLDER = "/generated";  // output/saved images (leave empty for current dir, or '/generated')
 const string PREVIEW_FILE = "preview.bmp";     // Preview filename
 
 class ImageEditor {
