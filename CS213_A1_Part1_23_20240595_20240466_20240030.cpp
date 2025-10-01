@@ -38,13 +38,13 @@
 #include <vector>
 
 // Ensure to adjust this path if your lib file is located elsewhere
-#include "lib/Image_Class.h" 
+#include "Image_Class.h" 
 using namespace std;
 
 // ===== CONFIGURABLE PATHS =====
 // The following can be modified these paths according to your testing environment
-const string IMAGES_FOLDER = "/images";        // input images (leave empty for root, or '/images' for example if you have an images folder)
-const string GENERATED_FOLDER = "/generated";  // output/saved images (leave empty for root, or '/generated')
+const string IMAGES_FOLDER = "";        // input images (leave empty for root, or '/images' for example if you have an images folder)
+const string GENERATED_FOLDER = "";  // output/saved images (leave empty for root, or '/generated')
 const string PREVIEW_FILE = "preview.bmp";     // Preview filename
 
 class ImageEditor {
