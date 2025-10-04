@@ -43,8 +43,8 @@ using namespace std;
 
 // ===== CONFIGURABLE PATHS =====
 // The following can be modified these paths according to your testing environment
-const string IMAGES_FOLDER = "/images";        // input images (leave empty for current dir, or '/images' for example if you have an images folder)
-const string GENERATED_FOLDER = "/generated";  // output/saved images (leave empty for current dir, or '/generated')
+const string IMAGES_FOLDER = "images/";        // input images (leave empty for current dir, or 'images/' for example if you have an images folder)
+const string GENERATED_FOLDER = "generated/";  // output/saved images (leave empty for current dir, or 'generated/')
 const string PREVIEW_FILE = "preview.bmp";     // Preview filename
 
 class ImageEditor {
@@ -232,6 +232,81 @@ private:
         currentImage = result;
     }
 
+    int calculateSuitableThickness() {
+        int minDim = min(currentImage.width, currentImage.height);
+        int thickness = max(5, minDim / 40); // At least 5 pixels, 2.5% of min dimension
+        return thickness;
+    }
+
+    void addFrame(int thickness, unsigned char r = 0, unsigned char g = 0, unsigned char b = 0, bool decorated = false) {
+        history.push(currentImage);
+
+        int w = currentImage.width;
+        int h = currentImage.height;
+
+        if (decorated) {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    bool isFrame = false;
+                    double brightness = 1.0;
+                    
+                    int distLeft = x;
+                    int distRight = w - 1 - x;
+                    int distTop = y;
+                    int distBottom = h - 1 - y;
+                    int minDistFromEdge = min(min(distLeft, distRight), min(distTop, distBottom));
+                    
+                    if (minDistFromEdge < thickness) {
+                        isFrame = true;
+                        
+                        double gradientFactor = (double)minDistFromEdge / thickness;
+                        brightness = 0.6 + (gradientFactor * 0.4);
+                        
+                        int cornerSize = thickness * 2;
+                        bool inCornerRegion = (distLeft < cornerSize && distTop < cornerSize) ||
+                                             (distRight < cornerSize && distTop < cornerSize) ||
+                                             (distLeft < cornerSize && distBottom < cornerSize) ||
+                                             (distRight < cornerSize && distBottom < cornerSize);
+                        
+                        if (inCornerRegion) {
+                            int cornerDist = min(min(distLeft, distRight), min(distTop, distBottom));
+                            int maxCornerDist = max(max(distLeft, distRight), max(distTop, distBottom));
+                            
+                            if ((cornerDist + maxCornerDist) % 4 < 2) {
+                                brightness *= 1.3;
+                            }
+                        }
+                        
+                        int innerBorder = thickness / 3;
+                        int outerBorder = thickness - thickness / 4;
+                        if (minDistFromEdge == innerBorder || minDistFromEdge == outerBorder) {
+                            brightness *= 0.5; 
+                        }
+                    }
+                    
+                    if (isFrame) {
+                        currentImage(x, y, 0) = min(255, (int)(r * brightness));
+                        currentImage(x, y, 1) = min(255, (int)(g * brightness));
+                        currentImage(x, y, 2) = min(255, (int)(b * brightness));
+                    }
+                }
+            }
+        } else {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    bool isFrame = (x < thickness || x >= w - thickness || 
+                                   y < thickness || y >= h - thickness);
+                    
+                    if (isFrame) {
+                        currentImage(x, y, 0) = r;
+                        currentImage(x, y, 1) = g;
+                        currentImage(x, y, 2) = b;
+                    }
+                }
+            }
+        }
+    }
+
 
     void undo() {
         if (!history.empty()) {
@@ -327,9 +402,10 @@ int main() {
         cout << "6. Rotate Image\n";
         cout << "7. Merge with Image\n";
         cout << "8. Resize Image\n";
-        cout << "9. Undo\n";
-        cout << "10. Exit\n";
-        cout << "11. Save & Exit\n";
+        cout << "9. Add Frame\n";
+        cout << "10. Undo\n";
+        cout << "11. Exit\n";
+        cout << "12. Save & Exit\n";
         cout << "Enter choice: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -421,8 +497,75 @@ int main() {
                 }
                 break;
             }
-            case 9: editor.undo(); break;
-            case 10: {
+            case 9: {
+                int thicknessChoice;
+                int thickness;
+                
+                cout << "Frame thickness:\n";
+                cout << "1. Auto (recommended based on image size)\n";
+                cout << "2. Custom thickness\n";
+                cout << "Enter choice: ";
+                cin >> thicknessChoice;
+                
+                if (thicknessChoice == 1) {
+                    thickness = editor.calculateSuitableThickness();
+                    cout << "Auto-calculated thickness: " << thickness << " pixels\n";
+                } else if (thicknessChoice == 2) {
+                    cout << "Enter frame thickness (in pixels): ";
+                    cin >> thickness;
+                    
+                    if (thickness <= 0) {
+                        cout << "Invalid thickness! Must be positive.\n";
+                        break;
+                    }
+                } else {
+                    cout << "Invalid choice! Using auto thickness.\n";
+                    thickness = editor.calculateSuitableThickness();
+                }
+                
+                int frameStyle;
+                cout << "\nFrame style:\n";
+                cout << "1. Simple (solid border)\n";
+                cout << "2. Decorated (ornamental)\n";
+                cout << "Enter choice: ";
+                cin >> frameStyle;
+                
+                bool decorated = (frameStyle == 2);
+                
+                cout << "\nChoose frame color:\n";
+                cout << "1. Black\n";
+                cout << "2. White\n";
+                cout << "3. Gold\n";
+                cout << "4. Silver";
+                cout << "5. Wood Brown\n";
+                cout << "6. Red\n";
+                cout << "7. Blue\n";
+                cout << "Enter choice: ";
+                
+                int colorChoice;
+                cin >> colorChoice;
+                
+                unsigned char r = 0, g = 0, b = 0;
+                
+                switch (colorChoice) {
+                    case 1: r = 0; g = 0; b = 0; break;           // Black
+                    case 2: r = 255; g = 255; b = 255; break;     // White
+                    case 3: r = 212; g = 175; b = 55; break;      // Gold
+                    case 4: r = 192; g = 192; b = 192; break;     // Silver
+                    case 5: r = 139; g = 90; b = 43; break;       // Wood Brown
+                    case 6: r = 255; g = 0; b = 0; break;         // Red
+                    case 7: r = 0; g = 0; b = 255; break;         // Blue
+                    default:
+                        cout << "Invalid choice! Using gold frame.\n";
+                        r = 212; g = 175; b = 55;
+                }
+                
+                editor.addFrame(thickness, r, g, b, decorated);
+                cout << "Frame added successfully!\n";
+                break;
+            }
+            case 10: editor.undo(); break;
+            case 11: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -439,7 +582,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 11: {
+            case 12: {
                 string defaultName = filename.substr(filename.find_last_of("/\\") + 1);
                 string saveName = editor.promptForValidFilename(defaultName);
                 
