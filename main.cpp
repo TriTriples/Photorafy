@@ -395,6 +395,43 @@ private:
         }
     }
 
+    void oldTVFilter(double noiseLevel = 0.15, double scanlineIntensity = 0.7, double distortionLevel = 20.0) {
+        history.push(currentImage);
+        srand(static_cast<unsigned>(time(0)));
+        
+        for (int y = 0; y < currentImage.height; y++) {
+            for (int x = 0; x < currentImage.width; x++) {
+                unsigned char r = currentImage(x, y, 0);
+                unsigned char g = currentImage(x, y, 1);
+                unsigned char b = currentImage(x, y, 2);
+                
+                // 1. NOISE
+                double noise = ((rand() % 1000) / 1000.0 - 0.5) * noiseLevel * 255.0;
+                if (rand() % 3 == 0)
+                    noise *= 1.5;
+                else
+                    noise *= 0.5;
+                // 2. SCANLINES 
+                double scanlineFactor = 1.0 - scanlineIntensity * (y % 2 == 0 ? 1.0 : 0.0);
+                if (y % 2 == 0) {
+                    scanlineFactor = scanlineIntensity;
+                }
+                // 3. DISTORTION
+                double baseShift = sin(y * 0.1 ) * distortionLevel;
+                double randomJitter = ((rand() % 1000) / 1000.0 - 0.5) * (distortionLevel * 0.2);
+                double colorShift = (baseShift + randomJitter) * 0.3;   
+                // Apply all effects
+                int newR = min(255, max(0, static_cast<int>((r + noise + colorShift) * scanlineFactor)));
+                int newG = min(255, max(0, static_cast<int>((g + noise - colorShift * 0.5) * scanlineFactor)));
+                int newB = min(255, max(0, static_cast<int>((b + noise + colorShift * 0.3) * scanlineFactor)));
+                
+                currentImage(x, y, 0) = newR;
+                currentImage(x, y, 1) = newG;
+                currentImage(x, y, 2) = newB;
+            }
+        }
+    }
+
     // using 2d prefix sum 
     void boxBlur(int radius = 5) {
         history.push(currentImage);
@@ -545,10 +582,11 @@ int main() {
         cout << "10. Edge Detection\n";
         cout << "11. Purple Filter\n";
         cout << "12. Sunlight Filter\n";
-        cout << "13. Stack Blur\n";
-        cout << "14. Undo\n";
-        cout << "15. Exit\n";
-        cout << "16. Save & Exit\n";
+        cout << "13. Blur\n";
+        cout << "14. Old TV Filter\n";
+        cout << "15. Undo\n";
+        cout << "16. Exit\n";
+        cout << "17. Save & Exit\n";
         cout << "Enter choice: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -744,8 +782,17 @@ int main() {
                 cout << "Blur filter applied successfully!\n";
                 break;
             }
-            case 14: editor.undo(); break;
-            case 15: {
+            case 14: {
+                double noiseLevel = 0.25;
+                double scanlineIntensity = 0.7;
+                double distortionLevel = 30.0;
+                cout << "Applying Old TV filter...\n";
+                editor.oldTVFilter(noiseLevel, scanlineIntensity, distortionLevel);
+                cout << "Old TV filter applied!\n";
+                break;
+            }
+            case 15: editor.undo(); break;
+            case 16: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -762,7 +809,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 16: {
+            case 17: {
                 string defaultName = filename.substr(filename.find_last_of("/\\") + 1);
                 string saveName = editor.promptForValidFilename(defaultName);
                 

@@ -26,6 +26,7 @@ public:
     void mergeWithImage(const std::string& imagePath);
     void rotate(int angleDegrees);
     void boxBlur(int radius);
+    void oldTVFilter(double noiseLevel = 0.15, double scanlineIntensity = 0.7, double distortionLevel = 20.0);
 
     void undo();
     void save(const std::string& path);
