@@ -395,6 +395,57 @@ private:
         }
     }
 
+    // using 2d prefix sum 
+    void boxBlur(int radius = 5) {
+        history.push(currentImage);
+        
+        if (radius < 1) return;
+        
+        int w = currentImage.width;
+        int h = currentImage.height;
+        
+        Image originalCopy = currentImage;
+        
+        vector<vector<vector<int>>> prefix(3, vector<vector<int>>(h + 1, vector<int>(w + 1, 0)));
+        
+        // Build prefix sum for each channel
+        for (int y = 1; y <= h; y++) {
+            int rSum = 0, gSum = 0, bSum = 0;
+            for (int x = 1; x <= w; x++) {
+                rSum += originalCopy(x - 1, y - 1, 0);
+                gSum += originalCopy(x - 1, y - 1, 1);
+                bSum += originalCopy(x - 1, y - 1, 2);
+                
+                prefix[0][y][x] = prefix[0][y - 1][x] + rSum;
+                prefix[1][y][x] = prefix[1][y - 1][x] + gSum;
+                prefix[2][y][x] = prefix[2][y - 1][x] + bSum;
+            }
+        }
+        
+        // Apply blur to each pixel using area sums
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int x1 = max(0, x - radius);
+                int y1 = max(0, y - radius);
+                int x2 = min(w - 1, x + radius);
+                int y2 = min(h - 1, y + radius);
+                
+                x1++; y1++; x2++; y2++;
+                
+                int area = (x2 - x1 + 1) * (y2 - y1 + 1);
+                
+                for (int c = 0; c < 3; c++) {
+                    int sum = prefix[c][y2][x2]
+                            - prefix[c][y1 - 1][x2]
+                            - prefix[c][y2][x1 - 1]
+                            + prefix[c][y1 - 1][x1 - 1];
+                    
+                    currentImage(x, y, c) = static_cast<unsigned char>(sum / area);
+                }
+            }
+        }
+    }
+
 
     void undo() {
         if (!history.empty()) {
@@ -494,9 +545,10 @@ int main() {
         cout << "10. Edge Detection\n";
         cout << "11. Purple Filter\n";
         cout << "12. Sunlight Filter\n";
-        cout << "13. Undo\n";
-        cout << "14. Exit\n";
-        cout << "15. Save & Exit\n";
+        cout << "13. Stack Blur\n";
+        cout << "14. Undo\n";
+        cout << "15. Exit\n";
+        cout << "16. Save & Exit\n";
         cout << "Enter choice: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -658,8 +710,42 @@ int main() {
             case 10: editor.edgeDetection(); cout << "Edge detection applied!\n"; break;
             case 11: editor.purpleFilter(); cout << "Purple filter applied!\n"; break;
             case 12: editor.sunlightFilter(0.05); cout << "Sunlight filter applied!\n"; break;
-            case 13: editor.undo(); break;
-            case 14: {
+            case 13: {
+                int blurRadius;
+                cout << "Select blur strength:\n";
+                cout << "1. Light (radius 3)\n";
+                cout << "2. Medium (radius 5)\n";
+                cout << "3. Strong (radius 15)\n";
+                cout << "4. Custom radius\n";
+                cout << "Enter choice: ";
+                
+                int blurChoice;
+                cin >> blurChoice;
+                
+                switch(blurChoice) {
+                    case 1: blurRadius = 3; break;
+                    case 2: blurRadius = 5; break;
+                    case 3: blurRadius = 15; break;
+                    case 4:
+                        cout << "Enter custom blur radius (1-100): ";
+                        cin >> blurRadius;
+                        if (blurRadius < 1 || blurRadius > 100) {
+                            cout << "Invalid radius! Using medium blur (5).\n";
+                            blurRadius = 5;
+                        }
+                        break;
+                    default:
+                        cout << "Invalid choice! Using medium blur.\n";
+                        blurRadius = 5;
+                }
+                
+                cout << "Applying blur with radius " << blurRadius << "...\n";
+                editor.boxBlur(blurRadius);
+                cout << "Blur filter applied successfully!\n";
+                break;
+            }
+            case 14: editor.undo(); break;
+            case 15: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -676,7 +762,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 15: {
+            case 16: {
                 string defaultName = filename.substr(filename.find_last_of("/\\") + 1);
                 string saveName = editor.promptForValidFilename(defaultName);
                 

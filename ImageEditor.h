@@ -25,6 +25,7 @@ public:
     void resizeImage(const Image& src, int newW, int newH);
     void mergeWithImage(const std::string& imagePath);
     void rotate(int angleDegrees);
+    void boxBlur(int radius);
 
     void undo();
     void save(const std::string& path);
