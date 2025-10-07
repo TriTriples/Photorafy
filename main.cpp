@@ -37,6 +37,8 @@
 #include <filesystem>
 #include <vector>
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 
 // Ensure to adjust this path if your lib file is located elsewhere
 #include "lib/Image_Class.h" 
@@ -432,6 +434,64 @@ private:
         }
     }
 
+    void skewImage(double skewDegree) {
+        history.push(currentImage);
+        
+        double skewAngle = -(skewDegree * 3.14) / 180.0;
+        double skewFactor = tan(skewAngle);
+        
+        int originalWidth = currentImage.width;
+        int originalHeight = currentImage.height;
+        
+        int maxShift = static_cast<int>(abs(skewFactor * originalHeight));
+        int newWidth = originalWidth + maxShift;
+        
+        Image skewed(newWidth, originalHeight);
+        
+        for (int y = 0; y < originalHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+                skewed(x, y, 0) = 255;  // White bg
+                skewed(x, y, 1) = 255;
+                skewed(x, y, 2) = 255;
+            }
+        }
+        
+        for (int y = 0; y < originalHeight; y++) {
+            int shift = static_cast<int>(skewFactor * y);
+            
+            int offset = (skewFactor < 0) ? maxShift : 0;
+            
+            for (int x = 0; x < originalWidth; x++) {
+                int newX = x + shift + offset;
+                
+                // Check bounds
+                if (newX >= 0 && newX < newWidth) {
+                    skewed(newX, y, 0) = currentImage(x, y, 0);
+                    skewed(newX, y, 1) = currentImage(x, y, 1);
+                    skewed(newX, y, 2) = currentImage(x, y, 2);
+                }
+            }
+        }
+        
+        for (int y = 0; y < originalHeight; y++) {
+            for (int x = 1; x < newWidth - 1; x++) {
+                // Check if this pixel is white (background) and neighbors have color
+                if (skewed(x, y, 0) == 255 && skewed(x, y, 1) == 255 && skewed(x, y, 2) == 255) {
+                    bool hasLeftNeighbor = (x > 0 && !(skewed(x-1, y, 0) == 255 && skewed(x-1, y, 1) == 255 && skewed(x-1, y, 2) == 255));
+                    bool hasRightNeighbor = (x < newWidth-1 && !(skewed(x+1, y, 0) == 255 && skewed(x+1, y, 1) == 255 && skewed(x+1, y, 2) == 255));
+                    
+                    if (hasLeftNeighbor && hasRightNeighbor) {
+                        skewed(x, y, 0) = (skewed(x-1, y, 0) + skewed(x+1, y, 0)) / 2;
+                        skewed(x, y, 1) = (skewed(x-1, y, 1) + skewed(x+1, y, 1)) / 2;
+                        skewed(x, y, 2) = (skewed(x-1, y, 2) + skewed(x+1, y, 2)) / 2;
+                    }
+                }
+            }
+        }
+        
+        currentImage = skewed;
+    }
+
     // using 2d prefix sum 
     void boxBlur(int radius = 5) {
         history.push(currentImage);
@@ -584,9 +644,10 @@ int main() {
         cout << "12. Sunlight Filter\n";
         cout << "13. Blur\n";
         cout << "14. Old TV Filter\n";
-        cout << "15. Undo\n";
-        cout << "16. Exit\n";
-        cout << "17. Save & Exit\n";
+        cout << "15. Skew Image\n";
+        cout << "16. Undo\n";
+        cout << "17. Exit\n";
+        cout << "18. Save & Exit\n";
         cout << "Enter choice: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -791,8 +852,31 @@ int main() {
                 cout << "Old TV filter applied!\n";
                 break;
             }
-            case 15: editor.undo(); break;
-            case 16: {
+            case 15: {
+                double skewDegree = 40.0;
+                /*
+                // Not needed for now, using default 40 degrees
+                cout << "Enter skew angle in degrees (positive = right lean, negative = left lean):\n";
+                cout << "range: -45 to 45 degrees\n";
+                cout << "Skew degree: ";
+                cin >> skewDegree;
+                
+                if (skewDegree < -45 || skewDegree > 45) {
+                    cout << "skew degree Must be between -45 and 45 for good results.\n";
+                    break;
+                }*/
+                
+                if (skewDegree == 0) {
+                    cout << "No skew applied (0 degrees).\n";
+                } else {
+                    cout << "Applying skew transformation with " << skewDegree << " degrees...\n";
+                    editor.skewImage(skewDegree);
+                    cout << "Skew filter applied successfully!\n";
+                }
+                break;
+            }
+            case 16: editor.undo(); break;
+            case 17: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -809,7 +893,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 17: {
+            case 18: {
                 string defaultName = filename.substr(filename.find_last_of("/\\") + 1);
                 string saveName = editor.promptForValidFilename(defaultName);
                 
