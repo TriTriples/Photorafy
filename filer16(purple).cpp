@@ -1,5 +1,5 @@
 #include <iostream>
-#include "libs/Image_Class.h"
+#include "lib/Image_Class.h"
 using namespace std;
 
 void purpleFilter(Image& image) {
@@ -10,7 +10,7 @@ void purpleFilter(Image& image) {
             unsigned char g = image(x, y, 1);
             unsigned char b = image(x, y, 2);
 
-            int newR = min(255, int(r + 50));
+            int newR = min(255, int(r + 60));
             int newG = max(0, int(g - 30));
             int newB = min(255, int(b + 50));
 
@@ -29,7 +29,7 @@ int main() {
     cout << "Enter output image name: ";
     cin >> outputName;
 
-    Image img(inputName);
+    Image img("images/" + inputName);
 
     purpleFilter(img);
 

@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <vector>
+#include <cmath>
 
 // Ensure to adjust this path if your lib file is located elsewhere
 #include "lib/Image_Class.h" 
@@ -307,6 +308,93 @@ private:
         }
     }
 
+    // This is using the Sobel operator
+    void edgeDetection() {
+        history.push(currentImage);
+        Image temp = currentImage;
+        int Gx[3][3] = {{-1, 0, 1},
+                        {-2, 0, 2},
+                        {-1, 0, 1}};
+        int Gy[3][3] = {{-1, -2, -1},
+                        { 0,  0,  0},
+                        { 1,  2,  1}};
+
+        for (int y = 1; y < currentImage.height - 1; y++) {
+            for (int x = 1; x < currentImage.width - 1; x++) {
+                double sumX = 0, sumY = 0;
+
+                for (int j = -1; j <= 1; j++) {
+                    for (int i = -1; i <= 1; i++) {
+                        int gray = (temp(x+i, y+j, 0) + temp(x+i, y+j, 1) + temp(x+i, y+j, 2)) / 3;
+                        sumX += Gx[j+1][i+1] * gray;
+                        sumY += Gy[j+1][i+1] * gray;
+                    }
+                }
+
+                int magnitude = sqrt(sumX * sumX + sumY * sumY);
+                magnitude = min(255, max(0, magnitude));
+
+                currentImage(x, y, 0) = 255 - magnitude;
+                currentImage(x, y, 1) = 255 - magnitude;
+                currentImage(x, y, 2) = 255 - magnitude;
+            }
+        }
+    }
+
+    void purpleFilter() {
+        history.push(currentImage);
+        for (int y = 0; y < currentImage.height; y++) {
+            for (int x = 0; x < currentImage.width; x++) {
+
+                unsigned char r = currentImage(x, y, 0);
+                unsigned char g = currentImage(x, y, 1);
+                unsigned char b = currentImage(x, y, 2);
+
+                int newR = min(255, int(r + 60));
+                int newG = max(0, int(g - 30));
+                int newB = min(255, int(b + 50));
+
+                currentImage(x, y, 0) = newR;
+                currentImage(x, y, 1) = newG;
+                currentImage(x, y, 2) = newB;
+            }
+        }
+    }
+
+    void sunlightFilter(double intensity = 0.02) {
+        history.push(currentImage);
+        int lightX = currentImage.width / 2;
+        int lightY = 0;
+
+        double maxDist = sqrt(
+            (currentImage.width - 1) * (currentImage.width - 1) +
+            (currentImage.height - 1) * (currentImage.height - 1)
+        );
+
+        for (int y = 0; y < currentImage.height; y++) {
+            for (int x = 0; x < currentImage.width; x++) {
+                double dx = x - lightX;
+                double dy = y - lightY;
+                double dist = sqrt(dx * dx + dy * dy);
+
+                double factor = 1 + intensity * (1 - (dist / maxDist));
+                if (factor < 1) factor = 1;
+
+                unsigned char r = currentImage(x, y, 0);
+                unsigned char g = currentImage(x, y, 1);
+                unsigned char b = currentImage(x, y, 2);
+
+                int newR = min(255, int(r * factor + 45));
+                int newG = min(255, int(g * factor + 30));
+                int newB = min(255, int(b * factor - 10));
+
+                currentImage(x, y, 0) = newR;
+                currentImage(x, y, 1) = newG;
+                currentImage(x, y, 2) = newB;
+            }
+        }
+    }
+
 
     void undo() {
         if (!history.empty()) {
@@ -403,9 +491,12 @@ int main() {
         cout << "7. Merge with Image\n";
         cout << "8. Resize Image\n";
         cout << "9. Add Frame\n";
-        cout << "10. Undo\n";
-        cout << "11. Exit\n";
-        cout << "12. Save & Exit\n";
+        cout << "10. Edge Detection\n";
+        cout << "11. Purple Filter\n";
+        cout << "12. Sunlight Filter\n";
+        cout << "13. Undo\n";
+        cout << "14. Exit\n";
+        cout << "15. Save & Exit\n";
         cout << "Enter choice: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -436,15 +527,15 @@ int main() {
                 }
                 break;
             }
-            case 2: editor.blackAndWhite(); break;
-            case 3: editor.grayscale(); break;
-            case 4: editor.invert(); break;
+            case 2: editor.blackAndWhite(); cout << "Black and white filter applied!\n"; break;
+            case 3: editor.grayscale(); cout << "Grayscale filter applied!\n"; break;
+            case 4: editor.invert(); cout << "Colors inverted!\n"; break;
             case 5: {
                 double factor;
                 cout << "Enter brightness factor (>1 to brighten, <1 to darken): ";
                 cin >> factor;
-                cout << factor;
                 editor.changeBrightness(factor);
+                cout << "Brightness adjusted with factor " << factor << "!\n";
                 break;
             }
             case 6: {
@@ -564,8 +655,11 @@ int main() {
                 cout << "Frame added successfully!\n";
                 break;
             }
-            case 10: editor.undo(); break;
-            case 11: {
+            case 10: editor.edgeDetection(); cout << "Edge detection applied!\n"; break;
+            case 11: editor.purpleFilter(); cout << "Purple filter applied!\n"; break;
+            case 12: editor.sunlightFilter(0.05); cout << "Sunlight filter applied!\n"; break;
+            case 13: editor.undo(); break;
+            case 14: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -582,7 +676,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 12: {
+            case 15: {
                 string defaultName = filename.substr(filename.find_last_of("/\\") + 1);
                 string saveName = editor.promptForValidFilename(defaultName);
                 

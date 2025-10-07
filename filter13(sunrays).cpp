@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include "libs/Image_Class.h"
+#include "lib/Image_Class.h"
 using namespace std;
 
 void sunlightFilter(Image& image, double intensity = 0.02) {
@@ -25,9 +25,9 @@ void sunlightFilter(Image& image, double intensity = 0.02) {
             unsigned char g = image(x, y, 1);
             unsigned char b = image(x, y, 2);
 
-            int newR = min(255, int(r * factor + 30));
+            int newR = min(255, int(r * factor + 45));
             int newG = min(255, int(g * factor + 30));
-            int newB = min(255, int(b * factor + 0));
+            int newB = min(255, int(b * factor - 10));
 
             image(x, y, 0) = newR;
             image(x, y, 1) = newG;
@@ -44,9 +44,9 @@ int main() {
     cout << "Enter output image name: ";
     cin >> outputName;
 
-    Image img(inputName);
+    Image img("images/" + inputName);
 
-    sunlightFilter(img, 0.02);
+    sunlightFilter(img, 0.05);
 
     img.saveImage(outputName);
 
