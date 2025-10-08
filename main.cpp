@@ -543,6 +543,83 @@ private:
         }
     }
 
+    void crop(int startX, int startY, int width, int height) {
+        history.push(currentImage);
+        
+        if (startX < 0 || startY < 0 || width <= 0 || height <= 0 ||
+            startX + width > currentImage.width || startY + height > currentImage.height) {
+            cout << "Invalid crop dimensions!\n";
+            return;
+        }
+        
+        Image cropped(width, height);
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                cropped(j, i, 0) = currentImage(startX + j, startY + i, 0);
+                cropped(j, i, 1) = currentImage(startX + j, startY + i, 1);
+                cropped(j, i, 2) = currentImage(startX + j, startY + i, 2);
+            }
+        }
+        currentImage = cropped;
+    }
+
+    void oilPainting(int radius = 3, int intensityLevels = 10) {
+    history.push(currentImage);
+    Image temp = currentImage;
+
+    int width = currentImage.width;
+    int height = currentImage.height;
+
+    vector<vector<int>> intensityMap(height, vector<int>(width));
+    for (int y = 0; y < height; y++)
+        for (int x = 0; x < width; x++)
+            intensityMap[y][x] = (currentImage(x, y, 0)
+                                + currentImage(x, y, 1)
+                                + currentImage(x, y, 2)) / 3;
+
+    vector<int> intensityCount(intensityLevels);
+    vector<int> sumR(intensityLevels);
+    vector<int> sumG(intensityLevels);
+    vector<int> sumB(intensityLevels);
+    for (int y = radius; y < height - radius; y++) {
+        for (int x = radius; x < width - radius; x++) {
+
+            std::fill(intensityCount.begin(), intensityCount.end(), 0);
+            std::fill(sumR.begin(), sumR.end(), 0);
+            std::fill(sumG.begin(), sumG.end(), 0);
+            std::fill(sumB.begin(), sumB.end(), 0);
+            for (int j = -radius; j <= radius; j++) {
+                for (int i = -radius; i <= radius; i++) {
+                    int R = currentImage(x + i, y + j, 0);
+                    int G = currentImage(x + i, y + j, 1);
+                    int B = currentImage(x + i, y + j, 2);
+                    int intensity = (intensityMap[y+j][x+i] * intensityLevels) / 255;
+                    if (intensity >= intensityLevels) intensity = intensityLevels - 1;
+
+                    intensityCount[intensity]++;
+                    sumR[intensity] += R;
+                    sumG[intensity] += G;
+                    sumB[intensity] += B;
+                }
+            }
+
+            int maxCount = 0, maxIndex = 0;
+            for (int k = 0; k < intensityLevels; k++)
+                if (intensityCount[k] > maxCount)
+                    maxCount = intensityCount[k], maxIndex = k;
+
+            if (maxCount > 0) {
+                temp(x, y, 0) = sumR[maxIndex] / maxCount;
+                temp(x, y, 1) = sumG[maxIndex] / maxCount;
+                temp(x, y, 2) = sumB[maxIndex] / maxCount;
+            }
+        }
+    }
+
+    currentImage = temp;
+}
+
+
 
     void undo() {
         if (!history.empty()) {
@@ -630,24 +707,26 @@ int main() {
     bool done = false;
     while (!done) {
         cout << "\n--- Welcome to your Image Editor ---\n";
-        cout << "1. Flip Image\n";
+        cout << "1. Grayscale\n";
         cout << "2. Black & White\n";
-        cout << "3. Grayscale\n";
-        cout << "4. Invert Colors\n";
-        cout << "5. Brighten/Darken\n";
+        cout << "3. Invert Colors\n";
+        cout << "4. Merge with Image\n";
+        cout << "5. Flip Image\n";
         cout << "6. Rotate Image\n";
-        cout << "7. Merge with Image\n";
-        cout << "8. Resize Image\n";
+        cout << "7. Brighten/Darken\n";
+        cout << "8. Crop Image\n";
         cout << "9. Add Frame\n";
-        cout << "10. Edge Detection\n";
-        cout << "11. Purple Filter\n";
-        cout << "12. Sunlight Filter\n";
-        cout << "13. Blur\n";
-        cout << "14. Old TV Filter\n";
-        cout << "15. Skew Image\n";
-        cout << "16. Undo\n";
-        cout << "17. Exit\n";
-        cout << "18. Save & Exit\n";
+        cout << "10. Detect Edges\n";
+        cout << "11. Resize Image\n";
+        cout << "12. Blur\n";
+        cout << "13. Sunlight Filter\n";
+        cout << "14. Oil Painting\n";
+        cout << "15. Old TV Filter\n";
+        cout << "16. Purple Filter\n";
+        cout << "17. Skew Image\n";
+        cout << "18. Undo\n";
+        cout << "19. Exit\n";
+        cout << "20. Save & Exit\n";
         cout << "Enter choice: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -659,7 +738,24 @@ int main() {
         }
 
         switch (choice) {
-            case 1: {
+            case 1: editor.grayscale(); cout << "Grayscale filter applied!\n"; break;
+            case 2: editor.blackAndWhite(); cout << "Black and white filter applied!\n"; break;
+            case 3: editor.invert(); cout << "Colors inverted!\n"; break;
+            case 4: {
+                string mergeFilename;
+                cout << "Enter filename of image to merge with (from images folder): ";
+                cin >> mergeFilename;
+                string mergePath = IMAGES_FOLDER + mergeFilename;
+                if (std::filesystem::exists(mergePath)) {
+                    cout << "Merging images in progress...\n";
+                    editor.mergeWithImage(mergePath);
+                    cout << "Images merged successfully!\n";
+                } else {
+                    cout << "File not found: " << mergePath << endl;
+                }
+                break;
+            }
+            case 5: {
                 int flipChoice;
                 cout << "Select flip direction:\n";
                 cout << "1. Vertically\n";
@@ -676,17 +772,6 @@ int main() {
                 } else {
                     cout << "Invalid choice! No flip applied.\n";
                 }
-                break;
-            }
-            case 2: editor.blackAndWhite(); cout << "Black and white filter applied!\n"; break;
-            case 3: editor.grayscale(); cout << "Grayscale filter applied!\n"; break;
-            case 4: editor.invert(); cout << "Colors inverted!\n"; break;
-            case 5: {
-                double factor;
-                cout << "Enter brightness factor (>1 to brighten, <1 to darken): ";
-                cin >> factor;
-                editor.changeBrightness(factor);
-                cout << "Brightness adjusted with factor " << factor << "!\n";
                 break;
             }
             case 6: {
@@ -711,31 +796,28 @@ int main() {
                 break;
             }
             case 7: {
-                string mergeFilename;
-                cout << "Enter filename of image to merge with (from images folder): ";
-                cin >> mergeFilename;
-                string mergePath = IMAGES_FOLDER + mergeFilename;
-                if (std::filesystem::exists(mergePath)) {
-                    cout << "Merging images in progress...\n";
-                    editor.mergeWithImage(mergePath);
-                    cout << "Images merged successfully!\n";
-                } else {
-                    cout << "File not found: " << mergePath << endl;
-                }
+                double factor;
+                cout << "Enter brightness factor (>1 to brighten, <1 to darken): ";
+                cin >> factor;
+                editor.changeBrightness(factor);
+                cout << "Brightness adjusted with factor " << factor << "!\n";
                 break;
             }
             case 8: {
-                int newWidth, newHeight;
-                cout << "Enter new width: ";
-                cin >> newWidth;
-                cout << "Enter new height: ";
-                cin >> newHeight;
-                if (newWidth > 0 && newHeight > 0) {
-                    cout << "Resizing image...\n";
-                    editor.resizeImage(editor.getCurrentImage(), newWidth, newHeight);
-                    cout << "Image resized to " << newWidth << "x" << newHeight << " pixels!\n";
+                Image current = editor.getCurrentImage();
+                int startX, startY, width, height;
+                cout << "Current image size: " << current.width << "x" << current.height << " pixels\n";
+                cout << "Enter starting position (x y): ";
+                cin >> startX >> startY;
+                cout << "Enter desired crop size (width height): ";
+                cin >> width >> height;
+                
+                if (startX >= 0 && startY >= 0 && width > 0 && height > 0 &&
+                    startX + width <= current.width && startY + height <= current.height) {
+                    editor.crop(startX, startY, width, height);
+                    cout << "Image cropped successfully to " << width << "x" << height << " pixels!\n";
                 } else {
-                    cout << "Invalid dimensions! Width and height must be positive.\n";
+                    cout << "Invalid crop parameters! Make sure the crop region fits within the image.\n";
                 }
                 break;
             }
@@ -807,9 +889,57 @@ int main() {
                 break;
             }
             case 10: editor.edgeDetection(); cout << "Edge detection applied!\n"; break;
-            case 11: editor.purpleFilter(); cout << "Purple filter applied!\n"; break;
-            case 12: editor.sunlightFilter(0.05); cout << "Sunlight filter applied!\n"; break;
-            case 13: {
+            case 11: {
+                Image current = editor.getCurrentImage();
+                cout << "Current image size: " << current.width << "x" << current.height << " pixels\n";
+                cout << "\nResize options:\n";
+                cout << "1. Specify new dimensions (width x height)\n";
+                cout << "2. Scale by ratio/percentage\n";
+                cout << "Enter choice: ";
+                
+                int resizeChoice;
+                cin >> resizeChoice;
+                
+                int newWidth, newHeight;
+                
+                if (resizeChoice == 1) {
+                    cout << "Enter new width: ";
+                    cin >> newWidth;
+                    cout << "Enter new height: ";
+                    cin >> newHeight;
+                    
+                    if (newWidth > 0 && newHeight > 0) {
+                        cout << "Resizing image...\n";
+                        editor.resizeImage(editor.getCurrentImage(), newWidth, newHeight);
+                        cout << "Image resized to " << newWidth << "x" << newHeight << " pixels!\n";
+                    } else {
+                        cout << "Invalid dimensions! Width and height must be positive.\n";
+                    }
+                } else if (resizeChoice == 2) {
+                    double ratio;
+                    cout << "Enter scale ratio (e.g., 0.5 for 50%, 2.0 for 200%): ";
+                    cin >> ratio;
+                    
+                    if (ratio > 0 && ratio <= 10) {
+                        newWidth = static_cast<int>(current.width * ratio);
+                        newHeight = static_cast<int>(current.height * ratio);
+                        
+                        if (newWidth > 0 && newHeight > 0) {
+                            cout << "Resizing image by " << (ratio * 100) << "%...\n";
+                            editor.resizeImage(editor.getCurrentImage(), newWidth, newHeight);
+                            cout << "Image resized to " << newWidth << "x" << newHeight << " pixels!\n";
+                        } else {
+                            cout << "Resulting dimensions too small!\n";
+                        }
+                    } else {
+                        cout << "Invalid ratio! Must be between 0 and 10.\n";
+                    }
+                } else {
+                    cout << "Invalid choice!\n";
+                }
+                break;
+            }
+            case 12: {
                 int blurRadius;
                 cout << "Select blur strength:\n";
                 cout << "1. Light (radius 3)\n";
@@ -843,16 +973,24 @@ int main() {
                 cout << "Blur filter applied successfully!\n";
                 break;
             }
+            case 13: editor.sunlightFilter(0.05); cout << "Sunlight filter applied!\n"; break;
             case 14: {
-                double noiseLevel = 0.25;
+                cout << "Applying oil painting effect...\n";
+                editor.oilPainting();
+                cout << "Oil painting filter applied successfully!\n";
+                break;
+            }
+            case 15: {
+                double noiseLevel = 0.35;
                 double scanlineIntensity = 0.7;
-                double distortionLevel = 30.0;
+                double distortionLevel = 35.0;
                 cout << "Applying Old TV filter...\n";
                 editor.oldTVFilter(noiseLevel, scanlineIntensity, distortionLevel);
                 cout << "Old TV filter applied!\n";
                 break;
             }
-            case 15: {
+            case 16: editor.purpleFilter(); cout << "Purple filter applied!\n"; break;
+            case 17: {
                 double skewDegree = 40.0;
                 /*
                 // Not needed for now, using default 40 degrees
@@ -875,8 +1013,8 @@ int main() {
                 }
                 break;
             }
-            case 16: editor.undo(); break;
-            case 17: {
+            case 18: editor.undo(); cout << "Last action undone!\n"; break;
+            case 19: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
                 cin >> saveChoice;
@@ -893,7 +1031,7 @@ int main() {
                 done = true;
                 break;
             }
-            case 18: {
+            case 20: {
                 string defaultName = filename.substr(filename.find_last_of("/\\") + 1);
                 string saveName = editor.promptForValidFilename(defaultName);
                 
