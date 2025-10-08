@@ -1,18 +1,19 @@
 /*
 * CS213 OOP - Assignment 1 - Image Filters
 * Made by: Mostafa Essam, Mohamed Osama, Ahmed Sayed
-* Section: 23/24 (We haven't yet registered because the website is down, so this might change later)
+* Section: S22
 * Students and Who did what:
-* - Mostafa Essam Atrees, ID: 20240595
-*   - Implemented Filters: Invert, Rotate
-* - Mohamed Osama Mohamed, ID: 20240466
-*   - Implemented Filters: Flip (Vertical & Horizontal), Black & White
-* - Ahmed Sayed Ibrahim, ID: 20240030
-*   - Implemented Filters: Grayscale, Brighten/Darken, Resize, Merge
+* - Mostafa Essam Atrees, ID: 20240595 (S22)
+*   - Implemented Filters: Invert, Rotate, Frames, Blur, Old TV, Image Skewing
+* - Mohamed Osama Mohamed, ID: 20240466 (S22)
+*   - Implemented Filters: Flip (Vertical & Horizontal), Black & White, Crop, Oil Painting
+* - Ahmed Sayed Ibrahim, ID: 20240030 (All-B)
+*   - Implemented Filters: Grayscale, Brighten/Darken, Resize, Merge, Edge Detection, Sunlight, Night Purple
 *  
 *  Menu is mostly done by Mostafa Essam.
 *  The application also has some more features, such as: Live Preview (preview.bmp in generated folder, lets you see the changes to the image), Undo functionality.
 *  Github Repository: https://github.com/MrQuartz99/img-filterer (it is private tho)
+*  Shared Document: https://docs.google.com/document/d/1K5frqWIAup2jfgmTLkIUESWwHec8LexgF5wVzLGBv6Y/edit?usp=sharing
 *
 * Our Project Structure:
 *  - the main cpp file (this file)
@@ -23,7 +24,7 @@
 *  - images folder: Contains the input images (you can add your own images here to test the program).
 *  
 *
-* Important NOTE: A specific project structure is not mentioned in the assignment instructures,
+* Important NOTE: A specific project structure is not mentioned in the assignment instructions,
 * but we thought it would be better to have a clean structure like this.
 *
 * Please kindly ensure to put the files in the correct folders and configure the PATHS below to match your testing environment, otherwise the program may not work as intended.
@@ -237,7 +238,7 @@ private:
 
     int calculateSuitableThickness() {
         int minDim = min(currentImage.width, currentImage.height);
-        int thickness = max(5, minDim / 40); // At least 5 pixels, 2.5% of min dimension
+        int thickness = max(8, minDim / 34);
         return thickness;
     }
 
@@ -250,44 +251,27 @@ private:
         if (decorated) {
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
-                    bool isFrame = false;
-                    double brightness = 1.0;
-                    
-                    int distLeft = x;
-                    int distRight = w - 1 - x;
-                    int distTop = y;
-                    int distBottom = h - 1 - y;
+                    int distLeft = x, distRight = w - 1 - x;
+                    int distTop = y, distBottom = h - 1 - y;
                     int minDistFromEdge = min(min(distLeft, distRight), min(distTop, distBottom));
                     
                     if (minDistFromEdge < thickness) {
-                        isFrame = true;
-                        
                         double gradientFactor = (double)minDistFromEdge / thickness;
-                        brightness = 0.6 + (gradientFactor * 0.4);
-                        
-                        int cornerSize = thickness * 2;
-                        bool inCornerRegion = (distLeft < cornerSize && distTop < cornerSize) ||
-                                             (distRight < cornerSize && distTop < cornerSize) ||
-                                             (distLeft < cornerSize && distBottom < cornerSize) ||
-                                             (distRight < cornerSize && distBottom < cornerSize);
-                        
-                        if (inCornerRegion) {
-                            int cornerDist = min(min(distLeft, distRight), min(distTop, distBottom));
-                            int maxCornerDist = max(max(distLeft, distRight), max(distTop, distBottom));
-                            
-                            if ((cornerDist + maxCornerDist) % 4 < 2) {
-                                brightness *= 1.3;
-                            }
-                        }
-                        
-                        int innerBorder = thickness / 3;
-                        int outerBorder = thickness - thickness / 4;
-                        if (minDistFromEdge == innerBorder || minDistFromEdge == outerBorder) {
-                            brightness *= 0.5; 
-                        }
-                    }
-                    
-                    if (isFrame) {
+                        double brightness = 0.6 + gradientFactor * 0.4;
+
+                        double light = 1.0;
+                        if (distTop < thickness / 2 && distLeft < thickness / 2) light = 1.3;
+                        if (distBottom < thickness / 2 && distRight < thickness / 2) light = 0.8;
+                        brightness *= light;
+
+                        if ((x / 4 + y / 4) % 2 == 0) brightness *= 0.9;
+
+                        int innerEdge = thickness * 2;
+                        if (minDistFromEdge > thickness / 2 && minDistFromEdge < innerEdge)
+                            brightness *= 1.0 + 0.3 * (1.0 - (double)(minDistFromEdge - thickness / 2) / (innerEdge - thickness / 2));
+
+                        brightness *= 0.95 + (rand() % 10) / 100.0;
+
                         currentImage(x, y, 0) = min(255, (int)(r * brightness));
                         currentImage(x, y, 1) = min(255, (int)(g * brightness));
                         currentImage(x, y, 2) = min(255, (int)(b * brightness));
@@ -860,7 +844,7 @@ int main() {
                 cout << "1. Black\n";
                 cout << "2. White\n";
                 cout << "3. Gold\n";
-                cout << "4. Silver";
+                cout << "4. Silver\n";
                 cout << "5. Wood Brown\n";
                 cout << "6. Red\n";
                 cout << "7. Blue\n";
