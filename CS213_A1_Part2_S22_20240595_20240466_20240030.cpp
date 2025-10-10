@@ -1,5 +1,5 @@
 /*
-* CS213 OOP - Assignment 1 - Image Filters
+* CS213 OOP - Assignment 1 - Baby Photoshop: Image Filters
 *
 *
 *  Github Repository: https://github.com/MrQuartz99/img-filterer (it is private tho)
