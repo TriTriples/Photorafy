@@ -28,7 +28,7 @@
 * but we thought it would be better to have a clean structure like this.
 *
 * Please kindly ensure to put the files in the correct folders and configure the PATHS below to match your testing environment, otherwise the program may not work as intended.
-* To make it easy, the provided app will assume the default paths for everything (not our own structure but just the current directory).
+* To make it easy, the provided app will assume the default paths for everything (not our own structure, but assuming everything is just in the current directory).
 */
 
 #include <iostream>
@@ -48,8 +48,8 @@ using namespace std;
 
 // ===== CONFIGURABLE PATHS =====
 // The following can be modified these paths according to your testing environment
-const string IMAGES_FOLDER = "";        // input images (leave empty for current dir, or 'images/' for example if you have an images folder)
-const string GENERATED_FOLDER = "";  // output/saved images (leave empty for current dir, or 'generated/')
+const string IMAGES_FOLDER = "images/";        // input images (leave empty for current dir, or 'images/' for example if you have an images folder)
+const string GENERATED_FOLDER = "generated/";  // output/saved images (leave empty for current dir, or 'generated/')
 const string PREVIEW_FILE = "preview.bmp";     // Preview filename
 
 class ImageEditor {
@@ -706,7 +706,7 @@ int main() {
     }
 
     ImageEditor editor(fullPath);
-    editor.preview(PREVIEW_FILE);
+    editor.preview(GENERATED_FOLDER + PREVIEW_FILE);
 
     int choice;
     bool done = false;

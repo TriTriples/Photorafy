@@ -710,7 +710,7 @@ int main() {
     }
 
     ImageEditor editor(fullPath);
-    editor.preview(PREVIEW_FILE);
+    editor.preview(GENERATED_FOLDER + PREVIEW_FILE);
 
     int choice;
     bool done = false;
