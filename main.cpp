@@ -42,13 +42,14 @@
 #include <ctime>
 
 // Ensure to adjust this path if your lib file is located elsewhere
+// We'll assume it is in the same directory
 #include "lib/Image_Class.h" 
 using namespace std;
 
 // ===== CONFIGURABLE PATHS =====
 // The following can be modified these paths according to your testing environment
-const string IMAGES_FOLDER = "images/";        // input images (leave empty for current dir, or 'images/' for example if you have an images folder)
-const string GENERATED_FOLDER = "generated/";  // output/saved images (leave empty for current dir, or 'generated/')
+const string IMAGES_FOLDER = "";        // input images (leave empty for current dir, or 'images/' for example if you have an images folder)
+const string GENERATED_FOLDER = "";  // output/saved images (leave empty for current dir, or 'generated/')
 const string PREVIEW_FILE = "preview.bmp";     // Preview filename
 
 class ImageEditor {
@@ -56,17 +57,35 @@ private:
     Image originalImage;
     Image currentImage;
     std::stack<Image> history;
+    static const int MAX_HISTORY_SIZE = 10;
     vector<int> supportedAngles = {0, 90, -90, 180, 270, -270};
     // .JPG, JPEG, .BMP, .PNG, .TGA
     vector<string> supportedFormats = {"jpg", "jpeg", "png", "bmp", "tga",};
-
-
+    // keeping up to 10 undos
+    void pushToHistory() {
+        if (history.size() >= MAX_HISTORY_SIZE) {
+            std::stack<Image> temp;
+            
+            for (int i = 0; i < MAX_HISTORY_SIZE - 1; i++) {
+                temp.push(history.top());
+                history.pop();
+            }
+            
+            history.pop();
+            
+            while (!temp.empty()) {
+                history.push(temp.top());
+                temp.pop();
+            }
+        }
+        history.push(currentImage);
+    }
     public:
     ImageEditor(const std::string& path)
         : originalImage(path), currentImage(path) {}
 
     void flipVertical() {
-        history.push(currentImage);
+        pushToHistory();
         for (int i = 0; i < currentImage.height / 2; i++) {
             for (int j = 0; j < currentImage.width; j++) {
                 for (int c = 0; c < 3; c++) {
@@ -78,7 +97,7 @@ private:
     }
 
     void flipHorizontal() {
-        history.push(currentImage);
+        pushToHistory();
         for (int i = 0; i < currentImage.height; i++) {
             for (int j = 0; j < currentImage.width / 2; j++) {
                 for (int c = 0; c < 3; c++) {
@@ -90,7 +109,7 @@ private:
     }
 
     void blackAndWhite() {
-        history.push(currentImage);
+        pushToHistory();
         for (int i = 0; i < currentImage.height; i++) {
             for (int j = 0; j < currentImage.width; j++) {
                 int r = currentImage(j, i, 0);
@@ -104,7 +123,7 @@ private:
     }
 
     void grayscale() {
-        history.push(currentImage);
+        pushToHistory();
         for (int i = 0; i < currentImage.height; i++) {
             for (int j = 0; j < currentImage.width; j++) {
                 int r = currentImage(j, i, 0);
@@ -117,7 +136,7 @@ private:
     }
 
     void invert() {
-        history.push(currentImage);
+        pushToHistory();
         for (int i = 0; i < currentImage.height; i++) {
             for (int j = 0; j < currentImage.width; j++) {
                 for (int c = 0; c < 3; c++) {
@@ -128,7 +147,7 @@ private:
     }
 
     void changeBrightness(double factor) {
-        history.push(currentImage);
+        pushToHistory();
         for (int y = 0; y < currentImage.height; y++) {
             for (int x = 0; x < currentImage.width; x++) {
                 unsigned char r = currentImage(x, y, 0);
@@ -147,7 +166,7 @@ private:
     }
 
     Image resizeImage(const Image& src, int newW, int newH, bool forMerge = false) {
-        if(!forMerge) history.push(currentImage);
+        if(!forMerge) pushToHistory();
         Image resized(newW, newH);
 
         double scaleX = static_cast<double>(src.width) / newW;
@@ -174,7 +193,7 @@ private:
     }
 
     void mergeWithImage(const std::string& imagePath) {
-        history.push(currentImage);
+        pushToHistory();
 
         Image img2(imagePath);
 
@@ -206,7 +225,7 @@ private:
     }
 
     void rotate(int angleDegrees) {
-        history.push(currentImage);
+        pushToHistory();
 
         int w = currentImage.width;
         int h = currentImage.height;
@@ -243,7 +262,7 @@ private:
     }
 
     void addFrame(int thickness, unsigned char r = 0, unsigned char g = 0, unsigned char b = 0, bool decorated = false) {
-        history.push(currentImage);
+        pushToHistory();
 
         int w = currentImage.width;
         int h = currentImage.height;
@@ -296,7 +315,7 @@ private:
 
     // This is using the Sobel operator
     void edgeDetection() {
-        history.push(currentImage);
+        pushToHistory();
         Image temp = currentImage;
         int Gx[3][3] = {{-1, 0, 1},
                         {-2, 0, 2},
@@ -328,7 +347,7 @@ private:
     }
 
     void purpleFilter() {
-        history.push(currentImage);
+        pushToHistory();
         for (int y = 0; y < currentImage.height; y++) {
             for (int x = 0; x < currentImage.width; x++) {
 
@@ -348,7 +367,7 @@ private:
     }
 
     void sunlightFilter(double intensity = 0.02) {
-        history.push(currentImage);
+        pushToHistory();
         int lightX = currentImage.width / 2;
         int lightY = 0;
 
@@ -382,7 +401,7 @@ private:
     }
 
     void oldTVFilter(double noiseLevel = 0.15, double scanlineIntensity = 0.7, double distortionLevel = 20.0) {
-        history.push(currentImage);
+        pushToHistory();
         srand(static_cast<unsigned>(time(0)));
         
         for (int y = 0; y < currentImage.height; y++) {
@@ -419,7 +438,7 @@ private:
     }
 
     void skewImage(double skewDegree) {
-        history.push(currentImage);
+        pushToHistory();
         
         double skewAngle = -(skewDegree * 3.14) / 180.0;
         double skewFactor = tan(skewAngle);
@@ -478,7 +497,7 @@ private:
 
     // using 2d prefix sum 
     void boxBlur(int radius = 5) {
-        history.push(currentImage);
+        pushToHistory();
         
         if (radius < 1) return;
         
@@ -528,7 +547,7 @@ private:
     }
 
     void crop(int startX, int startY, int width, int height) {
-        history.push(currentImage);
+        pushToHistory();
         
         if (startX < 0 || startY < 0 || width <= 0 || height <= 0 ||
             startX + width > currentImage.width || startY + height > currentImage.height) {
@@ -548,7 +567,7 @@ private:
     }
 
     void oilPainting(int radius = 3, int intensityLevels = 10) {
-    history.push(currentImage);
+    pushToHistory();
     Image temp = currentImage;
 
     int width = currentImage.width;
@@ -656,6 +675,8 @@ private:
         return saveName;
     }
 
+    bool canUndo() const { return !history.empty(); }
+
     vector<int> getSupportedAngles() const { return supportedAngles; }
 
 };
@@ -685,7 +706,7 @@ int main() {
     }
 
     ImageEditor editor(fullPath);
-    editor.preview("generated/preview.bmp");
+    editor.preview(PREVIEW_FILE);
 
     int choice;
     bool done = false;
@@ -997,7 +1018,15 @@ int main() {
                 }
                 break;
             }
-            case 18: editor.undo(); cout << "Last action undone!\n"; break;
+            case 18: {
+                if (editor.canUndo()) {
+                    editor.undo();
+                    cout << "Last action undone!\n";
+                } else {
+                    cout << "No actions to undo!\n";
+                }
+                break;
+            }
             case 19: {
                 char saveChoice;
                 cout << "Do you want to save your changes before exiting? (y/n): ";
