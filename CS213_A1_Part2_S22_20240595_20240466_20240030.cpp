@@ -362,9 +362,9 @@ private:
                 unsigned char g = currentImage(x, y, 1);
                 unsigned char b = currentImage(x, y, 2);
 
-                int newR = min(255, int(r + 60));
-                int newG = max(0, int(g - 30));
-                int newB = min(255, int(b + 50));
+                int newR = min(255, int(r + 20));
+                int newG = max(0, int(g - 70));
+                int newB = min(255, int(b + 20));
 
                 currentImage(x, y, 0) = newR;
                 currentImage(x, y, 1) = newG;
