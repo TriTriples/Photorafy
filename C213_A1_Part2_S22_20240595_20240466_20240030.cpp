@@ -32,7 +32,7 @@
 * but we thought it would be better to have a clean structure like this.
 *
 * Please kindly ensure to put the files in the correct folders and configure the PATHS below to match your testing environment, otherwise the program may not work as intended.
-* To make it easy, the provided app will assume the default paths for everything (not our own structure but just the current directory).
+* To make it easy, the provided app will assume the default paths for everything (not our own structure, but assuming everything is just in the current directory).
 */
 
 #include <iostream>
