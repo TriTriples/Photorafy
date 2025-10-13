@@ -3,7 +3,7 @@
 
 #include <string>
 #include <stack>
-#include "lib/Image_Class.h"
+#include "Image_Class.h"
 #include <vector>
 
 class ImageEditor {
@@ -11,8 +11,11 @@ private:
     Image originalImage;       
     Image currentImage;
     std::stack<Image> history;
+    static const int MAX_HISTORY_SIZE = 10;
     std::vector<int> supportedAngles = {0, 90, -90, 180, 270, -270};
     std::vector<std::string> supportedFormats = {"jpg", "jpeg", "png", "bmp", "tga"};
+    
+    void pushToHistory();
 
 public:
     ImageEditor(const std::string& path);
@@ -36,6 +39,9 @@ public:
     void boxBlur(int radius = 5);
     void crop(int startX, int startY, int width, int height);
     void oilPainting(int radius = 3, int intensityLevels = 10);
+    void waveDistortion();
+    void reflect(double fadeStrength = 0.6, bool addRipple = true, bool horizontal = true);
+    void glitch(double intensity = 1.0);
 
     void undo();
     void save(const std::string& path);
@@ -43,6 +49,7 @@ public:
     Image getCurrentImage() const;
     bool isValidImageFormat(const std::string& filename);
     std::string promptForValidFilename(const std::string& defaultName);
+    bool canUndo() const;
     std::vector<int> getSupportedAngles() const;
 };
 

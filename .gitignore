@@ -15,6 +15,7 @@
 *.so
 *.dylib
 *.dll
+!glfw/lib-mingw-w64/*.dll
 
 # Fortran module files
 *.mod
@@ -24,6 +25,7 @@
 *.lai
 *.la
 *.a
+!glfw/lib-mingw-w64/*.a
 *.lib
 
 # Executables
