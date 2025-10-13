@@ -2,7 +2,7 @@
 
 Run the following
 
-```mkdir build```\n
-```cd build```\n
-```cmake -G "MinGW Makefiles" ..```\n
-```cmake --build .```
+1. `mkdir build`
+2. `cd build`
+3. `cmake -G "MinGW Makefiles" ..`
+4. `cmake --build .`
