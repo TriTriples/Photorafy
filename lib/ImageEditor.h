@@ -42,6 +42,7 @@ public:
     void waveDistortion();
     void reflect(double fadeStrength = 0.6, bool addRipple = true, bool horizontal = true);
     void glitch(double intensity = 1.0);
+    void infrared();
 
     void undo();
     void save(const std::string& path);

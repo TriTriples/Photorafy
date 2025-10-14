@@ -13,11 +13,13 @@
 #include <algorithm>
 #include <iostream>
 
-const int MAX_PREVIEW_WIDTH = 1920;
-const int MAX_PREVIEW_HEIGHT = 1080;
+// ===== UITheme Class =====
+class UITheme {
+public:
+    static void ApplyModernTheme();
+};
 
-// Modern gradient-inspired theme
-void ApplyModernTheme()
+void UITheme::ApplyModernTheme()
 {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -113,8 +115,14 @@ void ApplyModernTheme()
     style.TabBorderSize = 0.0f;
 }
 
-// Helper function to draw section headers
-void DrawSectionHeader(const char* text) {
+// ===== UIComponents Class =====
+class UIComponents {
+public:
+    static void DrawSectionHeader(const char* text);
+    static bool IconButton(const char* label, const ImVec2& size, bool enabled = true, ImVec4 color = ImVec4(0,0,0,0));
+};
+
+void UIComponents::DrawSectionHeader(const char* text) {
     ImGui::Spacing();
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.60f, 0.80f, 1.0f, 1.0f));
     ImGui::Text("%s", text);
@@ -123,8 +131,7 @@ void DrawSectionHeader(const char* text) {
     ImGui::Spacing();
 }
 
-// Helper function for icon-style buttons
-bool IconButton(const char* label, const ImVec2& size, bool enabled = true, ImVec4 color = ImVec4(0,0,0,0)) {
+bool UIComponents::IconButton(const char* label, const ImVec2& size, bool enabled, ImVec4 color) {
     if (!enabled) {
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
     }
@@ -145,7 +152,38 @@ bool IconButton(const char* label, const ImVec2& size, bool enabled = true, ImVe
     return result;
 }
 
-Image createPreviewImage(const Image& original) {
+// ===== TextureManager Class =====
+class TextureManager {
+public:
+    TextureManager();
+    ~TextureManager();
+    
+    void updateTexture(const Image& image);
+    GLuint getTextureID() const { return texture; }
+    int getWidth() const { return texW; }
+    int getHeight() const { return texH; }
+    
+private:
+    GLuint texture;
+    int texW;
+    int texH;
+    
+    Image createPreviewImage(const Image& original);
+    
+    static const int MAX_PREVIEW_WIDTH = 1920;
+    static const int MAX_PREVIEW_HEIGHT = 1080;
+};
+
+TextureManager::TextureManager() : texture(0), texW(0), texH(0) {
+}
+
+TextureManager::~TextureManager() {
+    if (texture) {
+        glDeleteTextures(1, &texture);
+    }
+}
+
+Image TextureManager::createPreviewImage(const Image& original) {
     int width = original.width;
     int height = original.height;
     
@@ -191,8 +229,7 @@ Image createPreviewImage(const Image& original) {
     return preview;
 }
 
-// Function to create/update texture from image
-void updateImageTexture(GLuint& texture, int& texW, int& texH, const Image& image) {
+void TextureManager::updateTexture(const Image& image) {
     if (texture == 0) {
         glGenTextures(1, &texture);
     }
@@ -252,19 +289,18 @@ int main()
     
     // Load better fonts if available
     ImFont* mainFont = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 16.0f);
-    ImFont* headerFont = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeuib.ttf", 20.0f);
+    ImFont* headerFont = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 20.0f);
     if (!mainFont) {
         io.Fonts->AddFontDefault();
     }
     
-    ApplyModernTheme();
+    UITheme::ApplyModernTheme();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
     ImageEditor* editor = nullptr;
+    TextureManager textureManager;
     std::string currentFile;
-    GLuint texture = 0;
-    int texW = 0, texH = 0;
     int originalWidth = 0, originalHeight = 0;
     bool needsTextureUpdate = false;
 
@@ -300,7 +336,7 @@ int main()
 
         // Auto-update texture when image changes
         if (imageLoaded && needsTextureUpdate && editor) {
-            updateImageTexture(texture, texW, texH, editor->getCurrentImage());
+            textureManager.updateTexture(editor->getCurrentImage());
             needsTextureUpdate = false;
         }
 
@@ -330,7 +366,7 @@ int main()
         ImGui::Spacing();
 
         // File Operations Section
-        DrawSectionHeader("  File Operations");
+        UIComponents::DrawSectionHeader("  File Operations");
         
         // Load Image
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.14f, 0.14f, 0.16f, 1.0f));
@@ -344,7 +380,7 @@ int main()
         
         ImGui::Spacing();
         ImVec4 loadButtonColor = ImVec4(0.20f, 0.55f, 0.30f, 1.0f);
-        if (IconButton("  Load Image", ImVec2(-1, 40), true, loadButtonColor)) {
+        if (UIComponents::IconButton("  Load Image", ImVec2(-1, 40), true, loadButtonColor)) {
             if (std::filesystem::exists(loadPath)) {
                 delete editor;
                 editor = new ImageEditor(loadPath);
@@ -376,7 +412,7 @@ int main()
         
         ImGui::Spacing();
         ImVec4 saveButtonColor = ImVec4(0.25f, 0.45f, 0.75f, 1.0f);
-        if (IconButton("  Save Image", ImVec2(-1, 40), imageLoaded, saveButtonColor)) {
+        if (UIComponents::IconButton("  Save Image", ImVec2(-1, 40), imageLoaded, saveButtonColor)) {
             if (editor->save(savePath), true) {
                 statusMessage = "  Image saved successfully!";
                 statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
@@ -393,7 +429,7 @@ int main()
             ImGui::TextWrapped("  Load an image to begin editing and unlock all filters and adjustments.");
             ImGui::PopStyleColor();
         } else {
-            DrawSectionHeader("  Filters & Effects");
+            UIComponents::DrawSectionHeader("  Filters & Effects");
             
             // Tabs for organized filters
             if (ImGui::BeginTabBar("FilterTabs", ImGuiTabBarFlags_None)) {
@@ -539,6 +575,14 @@ int main()
                         statusMessage = "  Wave distortion applied!";
                         statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
                     }
+
+                    if (ImGui::Button(" Infrared", ImVec2(-1, 38))) {
+                        editor->infrared();
+                        needsTextureUpdate = true;
+                        statusMessage = "  Infrared filter applied!";
+                        statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
+                    }
+                    
                     
                     ImGui::Spacing();
                     ImGui::Separator();
@@ -656,7 +700,7 @@ int main()
         
         // Undo button
         ImVec4 undoColor = ImVec4(0.80f, 0.50f, 0.20f, 1.0f);
-        if (IconButton("  Undo Last Change", ImVec2(-1, 40), imageLoaded && editor && editor->canUndo(), undoColor)) {
+        if (UIComponents::IconButton("  Undo Last Change", ImVec2(-1, 40), imageLoaded && editor && editor->canUndo(), undoColor)) {
             editor->undo();
             originalWidth = editor->getCurrentImage().width;
             originalHeight = editor->getCurrentImage().height;
@@ -685,7 +729,8 @@ int main()
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
             ImGui::Text("  Image Information");
             ImGui::Separator();
-            ImGui::Text("  Original: %dx%d  |  Preview: %dx%d", originalWidth, originalHeight, texW, texH);
+            ImGui::Text("  Original: %dx%d  |  Preview: %dx%d", originalWidth, originalHeight, 
+                       textureManager.getWidth(), textureManager.getHeight());
             ImGui::PopStyleColor();
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -702,7 +747,7 @@ int main()
         ImGui::Begin("Preview", nullptr,
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-        if (imageLoaded && texture) {
+        if (imageLoaded && textureManager.getTextureID()) {
             // Dark background for image preview
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.08f, 0.08f, 0.09f, 1.0f));
             ImGui::BeginChild("PreviewArea", ImVec2(-1, -1), true, ImGuiWindowFlags_NoScrollbar);
@@ -711,7 +756,7 @@ int main()
             float availWidth = ImGui::GetContentRegionAvail().x - 40;
             float availHeight = ImGui::GetContentRegionAvail().y - 40;
             
-            float aspectRatio = (float)texW / texH;
+            float aspectRatio = (float)textureManager.getWidth() / textureManager.getHeight();
             float displayWidth = availWidth;
             float displayHeight = availWidth / aspectRatio;
             
@@ -742,7 +787,7 @@ int main()
             );
             
             // Display image with calculated size
-            ImGui::Image((ImTextureID)(intptr_t)texture, imageSize);
+            ImGui::Image((ImTextureID)(intptr_t)textureManager.getTextureID(), imageSize);
             
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -794,7 +839,6 @@ int main()
         glfwSwapBuffers(window);
     }
 
-    if (texture) glDeleteTextures(1, &texture);
     delete editor;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -595,6 +595,25 @@ void ImageEditor::mergeWithImage(const std::string& imagePath) {
         currentImage = result;
     }
 
+    void ImageEditor::infrared() {
+        pushToHistory();
+     for (int i = 0; i < currentImage.height; i++) {
+        for (int j = 0; j < currentImage.width; j++) {
+            int rc = currentImage(j, i, 0);
+            int g = currentImage(j, i, 1);
+            int b = currentImage(j, i, 2);
+
+            int nr = min(255, rc * 2);
+            int ng = g / 3;
+            int nb = b / 4;
+
+            currentImage(j, i, 0) = nr;
+            currentImage(j, i, 1) = min(255, nb + 30);
+            currentImage(j, i, 2) = ng;
+        }
+      }
+    }   
+
     void ImageEditor::reflect(double fadeStrength, bool addRipple, bool horizontal) {
         pushToHistory();
         int width = currentImage.width;
