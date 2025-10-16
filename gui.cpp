@@ -274,7 +274,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE); // Start windowed but allow maximizing
     
-    GLFWwindow* window = glfwCreateWindow(1600, 900, "Image Editor Pro", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1600, 900, "Photorafy", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -307,6 +307,7 @@ int main()
     // --- UI variables ---
     static char loadPath[256] = "images/luffy.jpg";
     static char savePath[256] = "generated/output.jpg";
+    static char mergePath[256] = "";
     double brightnessFactor = 1.0;
     int blurRadius = 5;
     int rotationAngle = 90;
@@ -314,6 +315,10 @@ int main()
     double skewDegree = 15.0;
     int oilRadius = 3;
     int oilLevels = 10;
+    int cropStartX = 0;
+    int cropStartY = 0;
+    int cropWidth = 100;
+    int cropHeight = 100;
     bool decorated = false;
     float frameColor[3] = {0.83f, 0.69f, 0.21f}; // gold
     bool imageLoaded = false;
@@ -359,7 +364,7 @@ int main()
         // Header with title
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.60f, 0.80f, 1.0f, 1.0f));
         ImGui::SetWindowFontScale(1.3f);
-        ImGui::Text("  Image Editor Pro");
+        ImGui::Text("  Photorafy");
         ImGui::SetWindowFontScale(1.0f);
         ImGui::PopStyleColor();
         ImGui::Separator();
@@ -387,6 +392,8 @@ int main()
                 currentFile = loadPath;
                 originalWidth = editor->getCurrentImage().width;
                 originalHeight = editor->getCurrentImage().height;
+                cropWidth = originalWidth;
+                cropHeight = originalHeight;
                 imageLoaded = true;
                 needsTextureUpdate = true;
                 statusMessage = "  Image loaded successfully!";
@@ -538,6 +545,47 @@ int main()
                         statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
                     }
                     
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+
+                    // Crop
+                    ImGui::Text("  Crop");
+                    ImGui::SetNextItemWidth(-1);
+                    ImGui::SliderInt("##CropStartX", &cropStartX, 0, originalWidth - 1, "Start X: %d");
+                    ImGui::SetNextItemWidth(-1);
+                    ImGui::SliderInt("##CropStartY", &cropStartY, 0, originalHeight - 1, "Start Y: %d");
+                    ImGui::SetNextItemWidth(-1);
+                    ImGui::SliderInt("##CropWidth", &cropWidth, 1, originalWidth, "Width: %d");
+                    ImGui::SetNextItemWidth(-1);
+                    ImGui::SliderInt("##CropHeight", &cropHeight, 1, originalHeight, "Height: %d");
+                    
+                    // Check validity
+                    bool isValidCrop = (cropStartX + cropWidth <= originalWidth) && (cropStartY + cropHeight <= originalHeight);
+                    if (!isValidCrop) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+                        ImGui::Text("  Invalid crop dimensions - adjust parameters");
+                        ImGui::PopStyleColor();
+                    }
+                    
+                    if (ImGui::Button("Apply Crop", ImVec2(-1, 35))) {
+                        if (isValidCrop) {
+                            editor->crop(cropStartX, cropStartY, cropWidth, cropHeight);
+                            originalWidth = editor->getCurrentImage().width;
+                            originalHeight = editor->getCurrentImage().height;
+                            cropWidth = originalWidth;
+                            cropHeight = originalHeight;
+                            cropStartX = 0;
+                            cropStartY = 0;
+                            needsTextureUpdate = true;
+                            statusMessage = "  Cropped!";
+                            statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
+                        } else {
+                            statusMessage = "  Invalid crop dimensions!";
+                            statusColor = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);
+                        }
+                    }
+                    
                     ImGui::EndTabItem();
                 }
 
@@ -599,6 +647,35 @@ int main()
                         needsTextureUpdate = true;
                         statusMessage = "  Oil painting applied!";
                         statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
+                    }
+                    
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+
+                    // Merge with Image
+                    ImGui::Text("  Merge with Image");
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.14f, 0.14f, 0.16f, 1.0f));
+                    ImGui::SetNextItemWidth(-130);
+                    ImGui::InputTextWithHint("##MergePath", "Enter image path...", mergePath, IM_ARRAYSIZE(mergePath));
+                    ImGui::PopStyleColor();
+                    ImGui::SameLine();
+                    if (ImGui::Button(" Browse... ", ImVec2(110, 0))) {
+                        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileMerge", "Choose Image File", "Image files (*.jpg *.jpeg *.png *.bmp *.tga){.jpg,.jpeg,.png,.bmp,.tga},.*");
+                    }
+                    
+                    ImGui::Spacing();
+                    ImVec4 mergeButtonColor = ImVec4(0.45f, 0.35f, 0.75f, 1.0f);
+                    if (UIComponents::IconButton("  Merge Images", ImVec2(-1, 40), imageLoaded, mergeButtonColor)) {
+                        if (std::filesystem::exists(mergePath)) {
+                            editor->mergeWithImage(mergePath);
+                            needsTextureUpdate = true;
+                            statusMessage = "  Images merged!";
+                            statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
+                        } else {
+                            statusMessage = "  Failed to load merge image!";
+                            statusColor = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);
+                        }
                     }
                     
                     ImGui::EndTabItem();
@@ -827,6 +904,13 @@ int main()
             if (ImGuiFileDialog::Instance()->IsOk()) {
                 std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
                 strcpy(savePath, filePathName.c_str());
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileMerge")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                strcpy(mergePath, filePathName.c_str());
             }
             ImGuiFileDialog::Instance()->Close();
         }
