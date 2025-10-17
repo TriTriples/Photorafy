@@ -21,7 +21,7 @@ set(SHARED_SOURCES
 # ---------------------------------------------------------
 # GUI version (Dear ImGui + OpenGL + GLFW)
 # ---------------------------------------------------------
-add_executable(img_filterer_gui
+add_executable(photorafy
     gui.cpp
     ${SHARED_SOURCES}
     imgui/imgui.cpp
@@ -34,18 +34,18 @@ add_executable(img_filterer_gui
     imgui/ImGuiFileDialog.cpp
 )
 
-target_include_directories(img_filterer_gui PRIVATE
+target_include_directories(photorafy PRIVATE
     ${CMAKE_SOURCE_DIR}/lib
     ${CMAKE_SOURCE_DIR}/imgui
     ${CMAKE_SOURCE_DIR}/imgui/backends
     ${CMAKE_SOURCE_DIR}/glfw/include
 )
 
-target_link_directories(img_filterer_gui PRIVATE
+target_link_directories(photorafy PRIVATE
     ${CMAKE_SOURCE_DIR}/glfw/lib-mingw-w64
 )
 
-target_link_libraries(img_filterer_gui
+target_link_libraries(photorafy
     glfw3
     opengl32
     gdi32
@@ -54,4 +54,4 @@ target_link_libraries(img_filterer_gui
 )
 
 # Prevent console window from appearing in GUI version
-set_target_properties(img_filterer_gui PROPERTIES WIN32_EXECUTABLE TRUE)
+set_target_properties(photorafy PROPERTIES WIN32_EXECUTABLE TRUE)

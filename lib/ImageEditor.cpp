@@ -141,6 +141,15 @@ Image ImageEditor::resizeImage(const Image& src, int newW, int newH, bool forMer
     return resized;
 }
 
+void ImageEditor::resize(int newWidth, int newHeight) {
+    if (newWidth <= 0 || newHeight <= 0) {
+        std::cerr << "Invalid resize dimensions!" << std::endl;
+        return;
+    }
+    currentImage = resizeImage(currentImage, newWidth, newHeight, false);
+    pushToHistory();
+}
+
 void ImageEditor::mergeWithImage(const std::string& imagePath) {
         pushToHistory();
 

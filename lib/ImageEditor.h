@@ -27,6 +27,7 @@ public:
     void invert();
     void changeBrightness(double factor);
     Image resizeImage(const Image& src, int newW, int newH, bool forMerge = false);
+    void resize(int newWidth, int newHeight);
     void mergeWithImage(const std::string& imagePath);
     void rotate(int angleDegrees);
     int calculateSuitableThickness();

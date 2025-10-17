@@ -1,3 +1,19 @@
+/*
+* Photorafy
+* This is done as part of CS213 OOP Programming at FCAI, Cairo University under supervision of Dr Mohammad El-Ramly
+* Made by: Mostafa Essam, Mohamed Osama, Ahmed Sayed
+* Section: S22
+* Students:
+* - Mostafa Essam Atrees, ID: 20240595 (S22)
+* - Mohamed Osama Mohamed, ID: 20240466 (S22)
+* - Ahmed Sayed Ibrahim, ID: 20240030 (All-B)
+*  
+*  Github Repository: https://github.com/MrQuartz99/img-filterer (it is private tho)
+*  Shared Document: https://docs.google.com/document/d/1K5frqWIAup2jfgmTLkIUESWwHec8LexgF5wVzLGBv6Y/edit?usp=sharing
+*  Video Demo: https://drive.google.com/file/d/1gaUNFoNvebYPPNmXoKVLQrlCS_5fUY_7/view?usp=sharing
+*
+*/
+
 
 #define STB_IMAGE_WRITE_STATIC
 #include "lib/ImageEditor.h" 
@@ -319,6 +335,8 @@ int main()
     int cropStartY = 0;
     int cropWidth = 100;
     int cropHeight = 100;
+    int resizeWidth = 100;
+    int resizeHeight = 100;
     bool decorated = false;
     float frameColor[3] = {0.83f, 0.69f, 0.21f}; // gold
     bool imageLoaded = false;
@@ -545,6 +563,33 @@ int main()
                         statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
                     }
                     
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+
+                    // Resize
+                    ImGui::Text("  Resize");
+                    ImGui::SetNextItemWidth(-1);
+                    ImGui::SliderInt("##ResizeWidth", &resizeWidth, 50, originalWidth * 2, "Width: %d");
+                    ImGui::SetNextItemWidth(-1);
+                    ImGui::SliderInt("##ResizeHeight", &resizeHeight, 50, originalHeight * 2, "Height: %d");
+                    
+                    if (ImGui::Button("Apply Resize", ImVec2(-1, 35))) {
+                        if (resizeWidth > 0 && resizeHeight > 0) {
+                            editor->resize(resizeWidth, resizeHeight);
+                            originalWidth = editor->getCurrentImage().width;
+                            originalHeight = editor->getCurrentImage().height;
+                            resizeWidth = originalWidth;
+                            resizeHeight = originalHeight;
+                            needsTextureUpdate = true;
+                            statusMessage = "  Resized!";
+                            statusColor = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
+                        } else {
+                            statusMessage = "  Invalid resize dimensions!";
+                            statusColor = ImVec4(1.0f, 0.3f, 0.3f, 1.0f);
+                        }
+                    }
+
                     ImGui::Spacing();
                     ImGui::Separator();
                     ImGui::Spacing();
