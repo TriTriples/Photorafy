@@ -107,17 +107,16 @@ Navigate to the build directory and run the .exe file and the GUI will launch.
 2. Black & White (Threshold)
 3. Invert
 4. Edge Detection
-5. Flip Vertical
-6. Flip Horizontal
-7. Brightness
-8. Blur (Box Blur Algorithm using 2d prefix sum to speed it up)
-9. Rotation
-10. Crop
-11. Purple Filter
-12. Sunlight Filter
-13. Old TV Filter
+5. Flip Vertical/Horizontal
+6. Brightness
+7. Blur (Box Blur Algorithm using 2d prefix sum to speed it up)
+8. Rotation
+9. Crop
+10. Purple Filter
+11. Sunlight Filter
+12. Old TV Filter
 
-14. Wave Distortion:
+13. Wave Distortion:
     - it applies a horizontal wave distortion to an image.
     • Each horizontal row (y) is shifted left or right based on the sine function sin (y / 
     frequency).
@@ -127,11 +126,11 @@ Navigate to the build directory and run the .exe file and the GUI will launch.
     In short: it creates a ripple/wave effect by horizontally displacing rows of pixels according to 
     a sine wave.
 
-15. Infrared Filter
-16. Oil Painting
-17. Merge with Image
+14. Infrared Filter
+15. Oil Painting
+16. Merge with Image
 
-18. Glitch Effect:
+17. Glitch Effect:
     -it applies a random glitch effect to the image.
     Because it uses random numbers, the output changes each time you run it.
     • Color channel shifts:
@@ -147,7 +146,7 @@ Navigate to the build directory and run the .exe file and the GUI will launch.
     • Scanline effect:
     Darkens every other row slightly to mimic an old CRT/glitchy screen
 
-19. Reflection:
+18. Reflection:
     - it creates a mirror reflection effect of the image, with optional fading and ripple distortion.
 
     • Horizontal reflection (top → bottom):
@@ -163,8 +162,9 @@ Navigate to the build directory and run the .exe file and the GUI will launch.
     o Similar, but flips the image horizontally to the right side.
     o Same fading, ripple, and color adjustments are applied.
 
-20. Skew Transform
-21. Custom Frame
+19. Skew Transform
+20. Custom Frame
+21. Resize
 
 ================================================================================
                        PROJECT STRUCTURE
